@@ -192,12 +192,21 @@ const AuthStack = () => (
 );
 
 // Main App Stack
-const MainStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="SeniorTabs" component={SeniorTabs} />
-    <Stack.Screen name="FamilyTabs" component={FamilyTabs} />
-  </Stack.Navigator>
-);
+const MainStack = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  const role = user?.user_metadata?.role || 'senior'; // Default to senior if role not found
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {role === 'senior' ? (
+        <Stack.Screen name="SeniorHome" component={SeniorTabs} />
+      ) : (
+        <Stack.Screen name="FamilyHome" component={FamilyTabs} />
+      )}
+      <Stack.Screen name="Profile" component={ProfileEntry} />
+    </Stack.Navigator>
+  );
+};
 
 // Memoized selectors
 const selectAuthState = (state: RootState) => state.auth;
@@ -231,32 +240,25 @@ const selectAuthStatus = createSelector(
   }
 );
 
-const AppContent = ({ navigation }: any) => {
-  // Select auth status from Redux store
-  const { isAuthenticated, loading, role } = useAppSelector(selectAuthStatus);
-
-  useEffect(() => {
-    console.log('Auth status changed:', { isAuthenticated, loading, role });
-  }, [isAuthenticated, loading, role]);
+const AppContent = () => {
+  const { isAuthenticated, loading } = useAppSelector(selectAuthStatus);
+  const user = useAppSelector((state) => state.auth.user);
+  const theme = useTheme();
+  const role = user?.user_metadata?.role || 'senior';
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2F855A" />
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: theme.colors.background,
+      }}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
-  // If user is authenticated, navigate to appropriate tabs based on role
-  // If user is authenticated, send them to the main stack. Sometimes `role`
-  // is not yet available during rehydration; `MainStack` contains both
-  // `SeniorTabs` and `FamilyTabs` so it's safe to show the main area and
-  // let navigation decide the landing screen once `role` is known.
-  if (isAuthenticated) {
-    return <MainStack />;
-  }
-
-  // Not authenticated -> show auth flow
   return (
     <Stack.Navigator 
       screenOptions={{
@@ -265,13 +267,17 @@ const AppContent = ({ navigation }: any) => {
         gestureEnabled: false,
       }}
     >
-      <Stack.Group>
+      {isAuthenticated ? (
+        <Stack.Screen 
+          name={role === 'senior' ? 'SeniorTabs' : 'FamilyTabs'} 
+          component={role === 'senior' ? SeniorTabs : FamilyTabs}
+        />
+      ) : (
         <Stack.Screen 
           name="Auth" 
-          component={AuthStack} 
-          options={{ headerShown: false }}
+          component={AuthStack}
         />
-      </Stack.Group>
+      )}
     </Stack.Navigator>
   );
 };
