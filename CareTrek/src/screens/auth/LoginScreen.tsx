@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
-import { TextInput, Button, useTheme } from 'react-native-paper';
+import { TextInput, Button, useTheme, Snackbar } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { signIn } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -13,16 +15,72 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
 
+  const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
+  const checkNetworkConnection = async () => {
+    try {
+      const response = await fetch('https://www.google.com', { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      console.error('Network check failed:', error);
+      return false;
+    }
+  };
+
   const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      setSnackbarVisible(true);
+      return;
+    }
+
     try {
       setLoading(true);
-      // TODO: Implement login logic
-      console.log('Login attempt with:', { email });
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // navigation.navigate('Main');
-    } catch (error) {
+      setError(null);
+      
+      // Check network connection first
+      const isConnected = await checkNetworkConnection();
+      if (!isConnected) {
+        throw new Error('No internet connection. Please check your network settings.');
+      }
+      
+      console.log('Attempting to sign in...');
+      const { data, error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('No data received from server. Please try again.');
+      }
+      
+      const { user, session } = data;
+      
+      if (!user) {
+        throw new Error('No user data received. Please try again.');
+      }
+
+      // Check if email is confirmed
+      if (!user.email_confirmed_at) {
+        setError('Please confirm your email before logging in. Check your inbox.');
+        setSnackbarVisible(true);
+        return;
+      }
+      
+      if (!session) {
+        throw new Error('Failed to create a session. Please try again.');
+      }
+      
+      console.log('Authentication successful, proceeding to login...');
+      await login(email, password);
+    } catch (error: any) {
       console.error('Login error:', error);
+      setError(error.message || 'Login failed. Please try again.');
+      setSnackbarVisible(true);
     } finally {
       setLoading(false);
     }
@@ -99,6 +157,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
+      
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        style={{ backgroundColor: theme.colors.error }}
+      >
+        {error}
+      </Snackbar>
     </View>
   );
 };

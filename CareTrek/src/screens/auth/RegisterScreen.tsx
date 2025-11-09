@@ -4,6 +4,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { TextInput, Button, useTheme, RadioButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import supabase, { signUp } from '../../lib/supabase';
 
 type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -15,27 +16,45 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [userType, setUserType] = useState<UserType>('senior');
+  const [isFamily, setIsFamily] = useState(false);
+  const userType = isFamily ? 'family' : 'senior';
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
 
   const handleRegister = async () => {
     if (password !== confirmPassword) {
-      // TODO: Show error message
-      console.error('Passwords do not match');
+      alert('Passwords do not match');
       return;
     }
 
+    if (!name || !email || !phone || !password) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    // Use the userType from state
+
     try {
       setLoading(true);
-      // TODO: Implement registration logic
-      console.log('Registration attempt with:', { name, email, phone, userType });
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // navigation.navigate('Login');
-    } catch (error) {
+      
+      // Use the new signUp function (it throws on error and returns data)
+      const data = await signUp(email, password, {
+        full_name: name,
+        role: userType,
+        phone: phone,
+      });
+
+      const user = data?.user || null;
+
+      // Navigate to login after successful registration
+      if (user) {
+        alert('Registration successful! Please check your email to verify your account.');
+        navigation.navigate('Login');
+      }
+    } catch (error: any) {
       console.error('Registration error:', error);
+      alert(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -47,11 +66,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
             <Svg width="120" height="120" viewBox="0 0 200 200" fill="none">
-              <Circle cx="100" cy="100" r="80" fill="#2F855A" fillOpacity="0.1"/>
-              <Path d="M100 40C100 40 120 60 120 80C120 100 100 120 100 120C100 120 80 100 80 80C80 60 100 40 100 40Z" fill="#2F855A"/>
-              <Path d="M100 120C100 120 120 140 120 160C120 180 100 200 100 200C100 200 80 180 80 160C80 140 100 120 100 120Z" fill="#2F855A"/>
-              <Path d="M80 100C60 100 40 100 40 100C40 100 60 80 80 80C100 80 120 80 120 80C120 80 100 100 80 100Z" fill="#2F855A"/>
-              <Path d="M120 100C140 100 160 100 160 100C160 100 140 120 120 120C100 120 80 120 80 120C80 120 100 100 120 100Z" fill="#2F855A"/>
+              <Circle cx="100" cy="100" r="80" fill="#8B5CF6" fillOpacity="0.1"/>
+              <Path d="M100 40C100 40 120 60 120 80C120 100 100 120 100 120C100 120 80 100 80 80C80 60 100 40 100 40Z" fill="#8B5CF6"/>
+              <Path d="M100 120C100 120 120 140 120 160C120 180 100 200 100 200C100 200 80 180 80 160C80 140 100 120 100 120Z" fill="#8B5CF6"/>
+              <Path d="M80 100C60 100 40 100 40 100C40 100 60 80 80 80C100 80 120 80 120 80C120 80 100 100 80 100Z" fill="#8B5CF6"/>
+              <Path d="M120 100C140 100 160 100 160 100C160 100 140 120 120 120C100 120 80 120 80 120C80 120 100 100 120 100Z" fill="#8B5CF6"/>
             </Svg>
           </View>
           <Text style={[styles.title, { color: theme.colors.primary }]}>Create Account</Text>
@@ -59,26 +78,26 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
         <View style={styles.formContainer}>
           <Text style={styles.sectionTitle}>I am a:</Text>
-          <View style={styles.radioGroup}>
-            <View style={styles.radioButton}>
-              <RadioButton
-                value="senior"
-                status={userType === 'senior' ? 'checked' : 'unchecked'}
-                onPress={() => setUserType('senior')}
-                color={theme.colors.primary}
-              />
-              <Text style={styles.radioLabel}>Senior Citizen</Text>
+          <RadioButton.Group onValueChange={value => setIsFamily(value === 'family')} value={isFamily ? 'family' : 'senior'}>
+            <View style={styles.radioGroup}>
+              <View style={styles.radioButton}>
+                <RadioButton.Android
+                  value="senior"
+                  status={!isFamily ? 'checked' : 'unchecked'}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.radioLabel}>Senior Citizen</Text>
+              </View>
+              <View style={styles.radioButton}>
+                <RadioButton.Android
+                  value="family"
+                  status={isFamily ? 'checked' : 'unchecked'}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.radioLabel}>Family Member</Text>
+              </View>
             </View>
-            <View style={styles.radioButton}>
-              <RadioButton
-                value="family"
-                status={userType === 'family' ? 'checked' : 'unchecked'}
-                onPress={() => setUserType('family')}
-                color={theme.colors.primary}
-              />
-              <Text style={styles.radioLabel}>Family Member</Text>
-            </View>
-          </View>
+          </RadioButton.Group>
 
           <TextInput
             label="Full Name"
@@ -201,6 +220,8 @@ const styles = StyleSheet.create({
   },
   radioGroup: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
     marginBottom: 20,
   },
   radioButton: {

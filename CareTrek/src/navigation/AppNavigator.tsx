@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator, Text as RNText } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import { RouteProp } from '@react-navigation/native';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -11,17 +12,18 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AuthProvider from '../contexts/AuthProvider';
 import { useAppSelector } from '../store';
+import ProfileEntry from '../screens/profile/ProfileEntry';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+// Dev screens
+import NetworkDebugScreen from '../screens/dev/NetworkDebugScreen';
 
 // Main App Screens
-import HomeScreen from '../screens/HomeScreen';
-// ProfileScreen is now defined locally
-import HealthScreen from '../screens/HealthScreen';
-import AlertsScreen from '../screens/AlertsScreen';
+import SeniorHomeScreen from '../screens/senior/SeniorHomeScreen';
+import FamilyHomeScreen from '../screens/family/FamilyHomeScreen';
 
 // Types
 export type RootStackParamList = {
@@ -30,7 +32,12 @@ export type RootStackParamList = {
   Main: undefined;
   Register: undefined;
   ForgotPassword: { email?: string };
-  Profile: undefined; // Add Profile to the stack param list
+  NetworkDebug?: undefined;
+  Profile: undefined;
+  SeniorHome: undefined;
+  FamilyHome: undefined;
+  SeniorTabs: undefined;
+  FamilyTabs: undefined;
 };
 
 export type MainTabParamList = {
@@ -38,13 +45,16 @@ export type MainTabParamList = {
   Alerts: undefined;
   Health: undefined;
   Profile: undefined;
+  SeniorHome: undefined;
+  FamilyHome: undefined;
 };
 
 // Screen props types for tab screens
 type TabScreenProps = {
-  navigation: any; // Using any to avoid complex type definitions
+  navigation: any;
   route: any;
 };
+
 
 // Navigation props types
 export type AppNavigationProps<T extends keyof RootStackParamList> = {
@@ -75,80 +85,117 @@ const TabBarIcon = (focused: boolean, iconName: string, label: string) => {
   );
 };
 
-// Create screen components with proper typing
-const HomeTab = (props: TabScreenProps) => <HomeScreen {...props} />;
-const AlertsTab = (props: TabScreenProps) => <AlertsScreen {...props} />;
-const HealthTab = (props: TabScreenProps) => <HealthScreen {...props} />;
-const ProfileTab = (props: TabScreenProps) => <ProfileScreen {...props} />;
+// Create screen components with proper typing (ProfileScreen imported)
 
-// Add proper typing for the Profile screen component
-interface ProfileScreenProps {
-  navigation: any;
-  route: any;
-}
+// Main Tab Navigator
+const SeniorTabs = () => {
+  const theme = useTheme();
 
-const ProfileScreen: React.FC<ProfileScreenProps> = () => {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <RNText>Profile Screen</RNText>
-    </View>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+
+          if (route.name === 'SeniorHome') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Health') {
+            iconName = focused ? 'heart-pulse' : 'heart-outline';
+          } else if (route.name === 'Alerts') {
+            iconName = focused ? 'bell' : 'bell-outline';
+          } else {
+            iconName = focused ? 'account' : 'account-outline';
+          }
+
+          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+      })}
+    >
+  <Tab.Screen name="SeniorHome" component={SeniorHomeScreen} />
+  <Tab.Screen name="Profile" component={ProfileEntry} />
+    </Tab.Navigator>
   );
 };
 
-// Main Tab Navigator
-const MainTabs = () => {
+const FamilyTabs = () => {
+  const theme = useTheme();
+
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#6200ee',
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string;
+
+          if (route.name === 'FamilyHome') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Health') {
+            iconName = focused ? 'heart-pulse' : 'heart-outline';
+          } else if (route.name === 'Alerts') {
+            iconName = focused ? 'bell' : 'bell-outline';
+          } else {
+            iconName = focused ? 'account' : 'account-outline';
+          }
+
+          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: 'gray',
-        tabBarStyle: { paddingBottom: 5, height: 60 },
-      }}
+        headerShown: false,
+      })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeTab} 
-        options={{
-          tabBarIcon: ({ focused }) => TabBarIcon(focused, 'home', 'Home'),
-          tabBarLabel: 'Home',
-        }} 
-      />
-      <Tab.Screen 
-        name="Alerts" 
-        component={AlertsTab} 
-        options={{
-          tabBarIcon: ({ focused }) => TabBarIcon(focused, 'bell', 'Alerts'),
-          tabBarLabel: 'Alerts',
-          tabBarBadge: 3, // Example badge count
-        }} 
-      />
-      <Tab.Screen 
-        name="Health" 
-        component={HealthTab} 
-        options={{
-          tabBarIcon: ({ focused }) => TabBarIcon(focused, 'heart-pulse', 'Health'),
-          tabBarLabel: 'Health',
-        }} 
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileTab} 
-        options={{
-          tabBarIcon: ({ focused }) => TabBarIcon(focused, 'account', 'Profile'),
-          tabBarLabel: 'Profile',
-        }} 
-      />
+  <Tab.Screen name="FamilyHome" component={FamilyHomeScreen} />
+  <Tab.Screen name="Profile" component={ProfileEntry} />
     </Tab.Navigator>
   );
 };
 
 // Main App Navigator
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: false }}>
-    <Stack.Screen name="Login" component={LoginScreen} />
-    <Stack.Screen name="Register" component={RegisterScreen} />
-    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen 
+      name="Login" 
+      component={LoginScreen}
+      options={{
+        headerShown: false,
+        gestureEnabled: false
+      }}
+    />
+    <Stack.Screen 
+      name="Register" 
+      component={RegisterScreen}
+      options={{
+        headerShown: true,
+        title: 'Create Account',
+        headerBackTitle: 'Back'
+      }}
+    />
+    <Stack.Screen 
+      name="ForgotPassword" 
+      component={ForgotPasswordScreen}
+      options={{
+        headerShown: true,
+        title: 'Reset Password',
+        headerBackTitle: 'Back'
+      }}
+    />
+    {__DEV__ && (
+      <Stack.Screen
+        name="NetworkDebug"
+        component={NetworkDebugScreen}
+        options={{ headerShown: true, title: 'Network Debug' }}
+      />
+    )}
+  </Stack.Navigator>
+);
+
+// Main App Stack
+const MainStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="SeniorTabs" component={SeniorTabs} />
+    <Stack.Screen name="FamilyTabs" component={FamilyTabs} />
   </Stack.Navigator>
 );
 
@@ -158,73 +205,73 @@ const selectAuthStatus = createSelector(
   [selectAuthState],
   (auth) => {
     // Ensure we have valid boolean values
-    const isAuthenticated = Boolean(auth?.isAuthenticated);
-    const loading = Boolean(auth?.loading);
+      const isAuthenticated = Boolean(auth?.isAuthenticated);
+      // auth slice uses `loading` (not `isLoading`) — coerce to boolean safely
+      const isLoading = Boolean(auth?.loading);
+      const role = auth?.role;
 
     if (__DEV__) {
       console.log('Auth Status:', { 
         isAuthenticated, 
-        loading, 
+        isLoading, 
         rawAuth: {
           ...auth,
           // Don't log the entire user object if it's large
-          user: auth?.user ? '[User Object]' : null,
+          user: auth?.user 
         }
       });
     }
     
     return {
       isAuthenticated,
-      loading,
+      // Return as `loading` because callers (AppContent) expect that name
+      loading: isLoading,
+      role,
     };
   }
 );
 
-const AppContent = () => {
-  const { isAuthenticated, loading } = useAppSelector(selectAuthStatus);
+const AppContent = ({ navigation }: any) => {
+  // Select auth status from Redux store
+  const { isAuthenticated, loading, role } = useAppSelector(selectAuthStatus);
 
-  // Show loading state if we're still determining auth state
-  if (loading === undefined || loading === true) {
+  useEffect(() => {
+    console.log('Auth status changed:', { isAuthenticated, loading, role });
+  }, [isAuthenticated, loading, role]);
+
+  if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#2F855A" />
       </View>
     );
   }
 
+  // If user is authenticated, navigate to appropriate tabs based on role
+  // If user is authenticated, send them to the main stack. Sometimes `role`
+  // is not yet available during rehydration; `MainStack` contains both
+  // `SeniorTabs` and `FamilyTabs` so it's safe to show the main area and
+  // let navigation decide the landing screen once `role` is known.
+  if (isAuthenticated) {
+    return <MainStack />;
+  }
+
+  // Not authenticated -> show auth flow
   return (
     <Stack.Navigator 
       screenOptions={{
         headerShown: false,
         animation: 'fade' as const,
-        // Explicitly set gestureEnabled as boolean to avoid passing string values
         gestureEnabled: false,
       }}
     >
-      {isAuthenticated ? (
-        // Authenticated screens
-        <Stack.Group>
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen 
-            name="Profile" 
-            component={ProfileTab}
-            options={{
-              headerShown: true,
-              title: 'My Profile',
-              headerBackTitle: 'Back'
-            }}
-          />
-        </Stack.Group>
-      ) : (
-        // Auth screens
-        <Stack.Group>
-          <Stack.Screen 
-            name="Auth" 
-            component={AuthStack} 
-            options={{ headerShown: false }}
-          />
-        </Stack.Group>
-      )}
+      <Stack.Group>
+        <Stack.Screen 
+          name="Auth" 
+          component={AuthStack} 
+          options={{ headerShown: false }}
+        />
+      </Stack.Group>
     </Stack.Navigator>
   );
 };
