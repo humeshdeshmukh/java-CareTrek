@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Text, TextInput, Button, Card, useTheme, Switch, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 

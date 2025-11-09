@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Avatar, Button, Card, Text, useTheme, Divider, List, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';

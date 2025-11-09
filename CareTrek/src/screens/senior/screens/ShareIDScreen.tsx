@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Share, Clipboard, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Share, Platform } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Text, Button, Card, useTheme, Divider, List, IconButton, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { supabase } from '../../../../lib/supabase';
-import { useAppSelector } from '../../../../store/hooks';
-import { selectUser } from '../../../../features/auth/authSlice';
+import { supabase } from '../../../lib/supabase';
+import { useAppSelector } from '../../../store/hooks';
+import { selectCurrentUser } from '../../../store/authSlice';
 
 const ShareIDScreen = () => {
   const theme = useTheme();
-  const user = useAppSelector(selectUser);
+  const user = useAppSelector(selectCurrentUser);
   const [shareCode, setShareCode] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
@@ -114,11 +116,16 @@ const ShareIDScreen = () => {
   };
 
   // Copy the share code to clipboard
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     if (!shareCode) return;
-    
-    Clipboard.setString(shareCode);
-    Alert.alert('Copied!', 'Share code copied to clipboard');
+
+    try {
+      await Clipboard.setStringAsync(shareCode);
+      Alert.alert('Copied!', 'Share code copied to clipboard');
+    } catch (err) {
+      console.error('Clipboard error:', err);
+      Alert.alert('Error', 'Failed to copy to clipboard');
+    }
   };
 
   // Share the code using the device's share sheet

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { TextInput, Button, useTheme, RadioButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';

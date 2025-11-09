@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Card, Title, Text, useTheme } from 'react-native-paper';
 
 const HealthDashboardScreen = () => {

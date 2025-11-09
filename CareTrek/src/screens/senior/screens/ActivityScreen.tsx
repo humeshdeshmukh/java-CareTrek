@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Card, Text, useTheme, Button, Snackbar } from 'react-native-paper';
 import { LineChart, BarChart } from 'react-native-svg-charts';
 import * as shape from 'd3-shape';

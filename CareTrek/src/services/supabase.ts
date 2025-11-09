@@ -2,7 +2,15 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, User } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
-import { createUserProfile, UserProfile, getUserProfile } from './profileService';
+// Avoid importing profileService here to prevent a require-cycle (profileService imports supabase)
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  role: 'senior' | 'family';
+  phone?: string;
+  created_at?: string;
+}
 
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
@@ -107,10 +115,20 @@ export const getUserWithProfile = async (): Promise<{
   profile: UserProfile | null;
 } | null> => {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) return null;
-  
-  const profile = await getUserProfile(user.id);
-  
-  return { user, profile };
+
+  // Query the profiles table directly here to avoid importing profileService and creating a require cycle
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error('Error fetching profile in getUserWithProfile:', profileError);
+    return { user, profile: null };
+  }
+
+  return { user, profile: profileData as UserProfile };
 };

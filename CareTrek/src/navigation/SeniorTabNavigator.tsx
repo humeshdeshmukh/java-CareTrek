@@ -16,6 +16,7 @@ import FallDetectionScreen from '../screens/senior/screens/FallDetectionScreen';
 import ProfileScreen from '../screens/senior/screens/ProfileScreen';
 import ActivityScreen from '../screens/senior/screens/ActivityScreen';
 import MedicalIDScreen from '../screens/senior/screens/MedicalIDScreen';
+import AppointmentsScreen from '../screens/senior/screens/AppointmentsScreen';
 
 export type SeniorTabParamList = {
   // Bottom Tab Navigation
@@ -38,6 +39,7 @@ export type SeniorTabParamList = {
     timestamp: string;
   };
   FallDetection: undefined;
+  Appointments: undefined;
   Profile: undefined;
   Activity: undefined;
   EditProfile: undefined;
@@ -136,6 +138,13 @@ const HomeStack = () => {
         options={{ 
           title: 'Activity',
         }} 
+      />
+      <Stack.Screen
+        name="Appointments"
+        component={AppointmentsScreen}
+        options={{
+          title: 'Appointments',
+        }}
       />
       <Stack.Screen 
         name="MedicalID" 
@@ -340,37 +349,5 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
 });
-
-export default SeniorTabNavigator;
-        options={{ title: 'Health' }}
-      />
-      <Tab.Screen 
-        name="Medication" 
-        component={MedicationScreen} 
-        options={{ title: 'Medication' }}
-      />
-      <Tab.Screen 
-        name="Emergency" 
-        component={EmergencyScreen} 
-        options={{
-          title: 'Emergency',
-          tabBarLabelStyle: {
-            color: '#ff3b30',
-            fontSize: 12,
-            marginBottom: 5,
-            fontWeight: 'bold',
-          },
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="alert"
-              size={size}
-              color="#ff3b30"
-            />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
 
 export default SeniorTabNavigator;

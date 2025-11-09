@@ -13,6 +13,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import AuthProvider from '../contexts/AuthProvider';
 import { useAppSelector } from '../store';
 import ProfileEntry from '../screens/profile/ProfileEntry';
+import SeniorTabNavigator from './SeniorTabNavigator';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -199,7 +200,8 @@ const MainStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {role === 'senior' ? (
-        <Stack.Screen name="SeniorHome" component={SeniorTabs} />
+        // Use the richer SeniorTabNavigator which defines HealthTab, ActivityTab, ProfileTab, etc.
+        <Stack.Screen name="SeniorTabs" component={SeniorTabNavigator} />
       ) : (
         <Stack.Screen name="FamilyHome" component={FamilyTabs} />
       )}
@@ -270,7 +272,7 @@ const AppContent = () => {
       {isAuthenticated ? (
         <Stack.Screen 
           name={role === 'senior' ? 'SeniorTabs' : 'FamilyTabs'} 
-          component={role === 'senior' ? SeniorTabs : FamilyTabs}
+          component={role === 'senior' ? SeniorTabNavigator : FamilyTabs}
         />
       ) : (
         <Stack.Screen 

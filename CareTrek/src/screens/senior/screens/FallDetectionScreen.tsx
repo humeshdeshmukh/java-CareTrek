@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Vibration, Alert } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { Text, Button, Card, useTheme, Switch, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 

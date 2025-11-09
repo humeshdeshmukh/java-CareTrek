@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useTheme, Card, Avatar, Button, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -170,15 +171,63 @@ const SeniorHomeScreen: React.FC = () => {
 
   const navigateTo = (screen: keyof RootStackParamList) => {
     try {
-      // For tabs, use the tab name directly
-      if (screen === 'Health' || screen === 'Medication' || screen === 'Emergency') {
-        // @ts-ignore - We know these are valid tab names
-        navigation.navigate(screen);
-      } 
-      // For other screens, navigate directly
-      else {
-        // @ts-ignore - We know these are valid screen names
-        navigation.navigate(screen);
+      // Map screen names to their corresponding tab names
+      const tabMap: Record<string, string> = {
+        'Health': 'HealthTab',
+        'Medication': 'HealthTab',
+        'Emergency': 'HealthTab',
+        'Appointments': 'HomeTab',
+        'Activity': 'ActivityTab',
+        'Profile': 'ProfileTab',
+        'MedicalID': 'ProfileTab',
+        'ShareID': 'ProfileTab',
+        'ConnectionRequest': 'ProfileTab'
+      };
+
+      const tabName = tabMap[screen as string];
+
+      // If this screen belongs to a tab, navigate via the parent Tab navigator
+      if (tabName) {
+          // Walk up the parent chain to find a navigator that knows about the tab route
+          let parent = (navigation as any).getParent ? (navigation as any).getParent() : null;
+          let targetParent = null as any;
+
+          while (parent) {
+            try {
+              const state = parent.getState ? parent.getState() : null;
+              const routeNames = state?.routeNames || state?.routes?.map((r: any) => r.name) || [];
+              if (routeNames && routeNames.includes(tabName)) {
+                targetParent = parent;
+                break;
+              }
+            } catch (e) {
+              // ignore and continue climbing
+            }
+            parent = parent.getParent ? parent.getParent() : null;
+          }
+
+          if (targetParent && typeof targetParent.navigate === 'function') {
+            // If we also want to open a specific nested screen within the tab,
+            // pass the `screen` param to the tab navigator (supported by nested navigators)
+            if (['Health', 'Medication', 'Emergency', 'MedicalID', 'ShareID', 'ConnectionRequest', 'Activity', 'Profile', 'Appointments'].includes(screen as string)) {
+              // Navigate to the tab, then to the specific screen inside that tab's stack
+              // e.g. parent.navigate('HealthTab', { screen: 'Medication' })
+              // @ts-ignore - dynamic nested navigation
+              targetParent.navigate(tabName, { screen });
+            } else {
+              // Just navigate to the tab's default screen
+              // @ts-ignore - tabName is a valid route on the parent navigator
+              targetParent.navigate(tabName);
+            }
+          } else {
+            // Fallback: try to navigate locally (may fail if route isn't in this navigator)
+            // @ts-ignore
+            navigation.navigate(tabName as any);
+          }
+      } else {
+        // Not a tab route — navigate locally
+        // @ts-ignore
+        navigation.navigate(screen as any);
       }
     } catch (error) {
       console.error('Navigation error:', error);
