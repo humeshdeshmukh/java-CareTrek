@@ -4,7 +4,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { TextInput, Button, useTheme, RadioButton } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import supabase, { signUp } from '../../lib/supabase';
+import { supabase, signUp } from '../../services/supabase';
 
 type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -17,41 +17,54 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isFamily, setIsFamily] = useState(false);
-  const userType = isFamily ? 'family' : 'senior';
+  const userType: 'senior' | 'family' = isFamily ? 'family' : 'senior';
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
 
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
-    }
-
-    if (!name || !email || !phone || !password) {
-      alert('Please fill in all required fields');
-      return;
-    }
-    
-    // Use the userType from state
-
     try {
+      // Basic validation
+      if (password !== confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+
+      // Trim all inputs
+      const trimmedName = name.trim();
+      const trimmedEmail = email.trim();
+      const trimmedPhone = phone.trim();
+      const trimmedPassword = password.trim();
+
+      // Validate required fields
+      if (!trimmedName || !trimmedEmail || !trimmedPhone || !trimmedPassword) {
+        throw new Error('Please fill in all required fields');
+      }
+
       setLoading(true);
       
-      // Use the new signUp function (it throws on error and returns data)
-      const data = await signUp(email, password, {
-        full_name: name,
+      console.log('Attempting to sign up with:', {
+        email: trimmedEmail,
+        full_name: trimmedName,
         role: userType,
-        phone: phone,
+        phone: trimmedPhone,
+        hasPassword: !!trimmedPassword
       });
 
-      const user = data?.user || null;
+      // Call the signUp function with required parameters
+      const signUpParams = {
+        email: trimmedEmail,
+        password: trimmedPassword,
+        full_name: trimmedName,
+        role: userType,
+        phone: trimmedPhone,
+      };
+      
+      console.log('Calling signUp with:', signUpParams);
+      await signUp(signUpParams);
 
-      // Navigate to login after successful registration
-      if (user) {
-        alert('Registration successful! Please check your email to verify your account.');
-        navigation.navigate('Login');
-      }
+      // If we get here, registration was successful
+      alert('Registration successful! Please check your email to verify your account.');
+      navigation.navigate('Login');
     } catch (error: any) {
       console.error('Registration error:', error);
       alert(error.message || 'Registration failed. Please try again.');
