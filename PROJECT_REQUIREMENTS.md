@@ -44,10 +44,72 @@ CareTrek is a cross-platform mobile application designed to connect seniors with
 - Social login (Google, Apple) - Future enhancement
 
 ### 2. Senior User Features
-- One-tap SOS with countdown
-- Health metrics dashboard
-- Medication reminders
-- Location sharing
+
+#### Health & Safety
+- **One-tap SOS** with countdown and automatic location sharing
+- **Health Metrics Dashboard**
+  - Real-time heart rate monitoring
+  - Blood oxygen (SpO2) levels
+  - Blood pressure tracking (if supported by device)
+  - Step count and activity tracking
+  - Sleep quality analysis
+- **Fall Detection** with automatic alerts to emergency contacts
+- **Emergency Information** access from lock screen
+
+#### Medication Management
+- **Medication Reminders** with customizable schedules
+- **Pill Identification** using camera
+- **Refill Alerts** when medication is running low
+- **Medication History** log
+- **Missed Dose** notifications
+
+#### Activity & Wellness
+- **Daily Activity Tracking**
+  - Steps walked
+  - Active minutes
+  - Distance covered
+  - Calories burned
+- **Exercise Programs** tailored for seniors
+- **Hydration Tracker**
+- **Mood Tracker**
+
+#### Communication
+- **Quick Call** to emergency contacts
+- **Family Group Chat** with large text and voice message support
+- **Check-in Notifications** to family members
+- **Location Sharing** with family (real-time or scheduled)
+
+#### Smartwatch Integration (FireBolt Watch)
+- **Watch Connection Status**
+- **Battery Level Monitoring**
+- **Health Data Synchronization**
+- **Watch Face Customization**
+- **Haptic Feedback** for notifications
+
+#### Voice Commands & Accessibility
+- **Voice-Activated Controls**
+  - "Call [Contact]"
+  - "I need help"
+  - "What's my next medication?"
+  - "Check my heart rate"
+- **Screen Reader** compatibility
+- **High Contrast Mode**
+- **Adjustable Text Sizes**
+- **Simplified UI** option
+
+#### Appointments & Reminders
+- **Doctor Appointments** with reminders
+- **Medication Schedule**
+- **Family Visits** calendar
+- **Therapy Sessions** tracking
+- **Vaccination Reminders**
+
+#### Emergency Features
+- **Medical ID** with critical health information
+- **Emergency Contacts** quick access
+- **Auto-Alert** on fall detection
+- **Location History** for emergencies
+- **Emergency Mode** with simplified interface
 - Simple, accessible interface
 - Voice-guided navigation
 - Emergency contacts
