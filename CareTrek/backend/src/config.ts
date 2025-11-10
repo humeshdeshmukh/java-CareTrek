@@ -1,10 +1,12 @@
+import { env } from './env';
+
 // Server Configuration
-export const PORT = process.env.PORT || 5000;
-export const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
+export const PORT = parseInt(env.PORT, 10);
+export const JWT_SECRET = env.JWT_SECRET;
 
 // Supabase Configuration
-export const SUPABASE_URL = process.env.SUPABASE_URL || 'your-supabase-url';
-export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'your-supabase-anon-key';
+export const SUPABASE_URL = env.SUPABASE_URL;
+export const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY;
 
 // Table Names
 export const TABLES = {

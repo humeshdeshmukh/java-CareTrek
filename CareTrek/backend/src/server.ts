@@ -1,33 +1,24 @@
 import express from 'express';
 import cors from 'cors';
-import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { env } from './env';
 import appointmentRoutes from './routes/appointment.routes';
 import healthRoutes from './routes/health.routes';
 
-// Debug: Log current working directory
+// Debug: Log current working directory and environment
 console.log('Current working directory:', process.cwd());
+console.log('Environment variables loaded from .env file');
 
-// Load environment variables from .env file
-const envPath = '.env';
-console.log('Loading environment variables from:', envPath);
-const result = config({ path: envPath });
-
-if (result.error) {
-  console.error('Error loading .env file:', result.error);
-} else {
-  console.log('Successfully loaded .env file');
-}
-
+// Destructure environment variables with defaults
 const { 
-  SUPABASE_URL = '', 
-  SUPABASE_ANON_KEY = '',
-  PORT = '5000',
-  JWT_SECRET = 'your-default-jwt-secret'
-} = process.env;
+  SUPABASE_URL, 
+  SUPABASE_ANON_KEY,
+  PORT,
+  JWT_SECRET
+} = env;
 
 // Debug: Log loaded environment variables (redacting sensitive info)
-console.log('Environment variables loaded:');
+console.log('Environment configuration:');
 console.log('- SUPABASE_URL:', SUPABASE_URL ? '*** (set)' : 'Not set');
 console.log('- SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '*** (set)' : 'Not set');
 console.log('- JWT_SECRET:', JWT_SECRET ? '*** (set)' : 'Not set');
