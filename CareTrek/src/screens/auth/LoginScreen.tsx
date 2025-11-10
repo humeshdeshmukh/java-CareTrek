@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 import { TextInput, Button, useTheme, Snackbar } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { signIn } from '../../lib/supabase';
+import { signIn } from '../../services/authService';
 import { useAuth } from '../../contexts/AuthContext';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
@@ -47,36 +47,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       }
       
       console.log('Attempting to sign in...');
-      const { data, error } = await signIn(email, password);
+      const { user, session, error: signInError } = await signIn(email, password);
       
-      if (error) {
-        console.error('Sign in error:', error);
-        throw error;
+      if (signInError) {
+        console.error('Sign in error:', signInError);
+        throw signInError;
       }
 
-      if (!data) {
-        throw new Error('No data received from server. Please try again.');
-      }
-      
-      const { user, session } = data;
-      
-      if (!user) {
-        throw new Error('No user data received. Please try again.');
+      if (!user || !session) {
+        throw new Error('No user or session returned from server');
       }
 
       // Check if email is confirmed
-      if (!user.email_confirmed_at) {
+      if (user && !user.email_confirmed_at) {
         setError('Please confirm your email before logging in. Check your inbox.');
         setSnackbarVisible(true);
         return;
       }
       
-      if (!session) {
-        throw new Error('Failed to create a session. Please try again.');
-      }
-      
       console.log('Authentication successful, proceeding to login...');
-      await login(email, password);
+      await login(user.id, session.access_token);
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please try again.');

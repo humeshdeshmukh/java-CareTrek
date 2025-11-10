@@ -20,6 +20,8 @@ import LocationScreen from '../screens/senior/screens/LocationScreen';
 import AppointmentsScreen from '../screens/senior/screens/AppointmentsScreen';
 import ChatScreen from '../screens/senior/screens/ChatScreen';
 import AddFamilyMemberScreen from '../screens/senior/screens/AddFamilyMemberScreen';
+import CalendarView from '../screens/senior/screens/CalendarView';
+import AddAppointmentScreen from '../screens/senior/screens/AddAppointmentScreen';
 
 export type SeniorTabParamList = {
   // Bottom Tab Navigation
@@ -52,6 +54,8 @@ export type SeniorTabParamList = {
   Location: undefined;
   Chat: undefined;
   AddFamilyMember: undefined;
+  CalendarView: { appointments: any[] };
+  AddAppointment: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -136,6 +140,20 @@ const HomeStack = () => {
         component={FallDetectionScreen} 
         options={{ 
           title: 'Fall Detection',
+        }} 
+      />
+      <Stack.Screen 
+        name="CalendarView" 
+        component={CalendarView} 
+        options={{ 
+          title: 'Calendar View',
+        }} 
+      />
+      <Stack.Screen 
+        name="AddAppointment" 
+        component={AddAppointmentScreen} 
+        options={{ 
+          title: 'Add Appointment',
         }} 
       />
     </Stack.Navigator>
