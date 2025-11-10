@@ -25,6 +25,8 @@ type RootStackParamList = {
   Appointments: undefined;
   MedicalID: undefined;
   Location: undefined;
+  Profile: undefined;
+  Chat: undefined;
   ConnectionRequest: {
     familyMemberId: string;
     familyMemberName: string;
@@ -127,6 +129,13 @@ const SeniorHomeScreen: React.FC = () => {
       color: '#FF9800'
     },
     { 
+      id: 'chat', 
+      title: 'Chat', 
+      icon: 'message-text' as const,
+      screen: 'Chat' as const,
+      color: '#2196F3'
+    },
+    { 
       id: 'medicalId', 
       title: 'Medical ID', 
       icon: 'card-account-details' as const,
@@ -139,6 +148,13 @@ const SeniorHomeScreen: React.FC = () => {
       icon: 'account-plus' as const,
       screen: 'ShareID' as const,
       color: '#00BCD4'
+    },
+    { 
+      id: 'profile', 
+      title: 'Profile', 
+      icon: 'account' as const,
+      screen: 'Profile' as const,
+      color: '#9C27B0'
     }
   ];
 
@@ -185,8 +201,10 @@ const SeniorHomeScreen: React.FC = () => {
         // Home Tab Screens
         'Appointments': { tab: 'HomeTab' },
         'FallDetection': { tab: 'HomeTab' },
+        'Chat': { tab: 'HomeTab' },
         
         // Profile Tab Screens
+        'Profile': { tab: 'ProfileTab' },
         'Location': { tab: 'ProfileTab' },
         'MedicalID': { tab: 'ProfileTab' },
         'ShareID': { tab: 'ProfileTab' },

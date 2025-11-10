@@ -18,6 +18,8 @@ import ActivityScreen from '../screens/senior/screens/ActivityScreen';
 import MedicalIDScreen from '../screens/senior/screens/MedicalIDScreen';
 import LocationScreen from '../screens/senior/screens/LocationScreen';
 import AppointmentsScreen from '../screens/senior/screens/AppointmentsScreen';
+import ChatScreen from '../screens/senior/screens/ChatScreen';
+import AddFamilyMemberScreen from '../screens/senior/screens/AddFamilyMemberScreen';
 
 export type SeniorTabParamList = {
   // Bottom Tab Navigation
@@ -48,6 +50,8 @@ export type SeniorTabParamList = {
   PrivacyPolicy: undefined;
   MedicalID: undefined;
   Location: undefined;
+  Chat: undefined;
+  AddFamilyMember: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -112,6 +116,20 @@ const HomeStack = () => {
         options={{
           title: 'Appointments',
         }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen} 
+        options={{ 
+          title: 'Chat with Care Team',
+        }} 
+      />
+      <Stack.Screen 
+        name="AddFamilyMember" 
+        component={AddFamilyMemberScreen} 
+        options={{ 
+          title: 'Add Family Member',
+        }} 
       />
       <Stack.Screen 
         name="FallDetection" 
@@ -257,39 +275,39 @@ const SeniorTabNavigator = () => {
 
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'home';
+
+          if (route.name === 'HomeTab') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'ActivityTab') {
+            iconName = focused ? 'chart-line' : 'chart-line';
+          } else if (route.name === 'HealthTab') {
+            iconName = focused ? 'heart-pulse' : 'heart-pulse';
+          } else if (route.name === 'ProfileTab') {
+            iconName = focused ? 'account' : 'account-outline';
+          }
+
+          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+        },
         tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.secondary,
-        tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.outline,
-          backgroundColor: theme.colors.surface,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6,
-        },
+        tabBarInactiveTintColor: theme.colors.onSurfaceDisabled,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.outline,
+          },
+        ],
         headerShown: false,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          marginTop: 0,
-          marginBottom: 4,
-          fontFamily: 'sans-serif-medium',
-        },
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
-        tabBarHideOnKeyboard: true,
-      }}
+      })}
     >
       <Tab.Screen
         name="HomeTab"
         component={HomeStack}
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" size={size} color={color} />
-          ),
         }}
       />
       <Tab.Screen
@@ -312,15 +330,18 @@ const SeniorTabNavigator = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStack}
+      <Tab.Screen 
+        name="ProfileTab" 
+        component={ProfileStack} 
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account" size={size} color={color} />
-          ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('ProfileTab', { screen: 'Profile' });
+          },
+        })}
       />
     </Tab.Navigator>
   );
