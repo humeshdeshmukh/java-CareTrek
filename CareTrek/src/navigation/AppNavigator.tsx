@@ -15,6 +15,11 @@ import { useAppSelector } from '../store';
 import ProfileEntry from '../screens/profile/ProfileEntry';
 import SeniorTabNavigator from './SeniorTabNavigator';
 import FamilyTabNavigator from './FamilyTabNavigator';
+import { FamilyProvider } from '../contexts/FamilyContext';
+
+// Mock screens for tabs
+const ActivityScreen = () => <View><RNText>Activity</RNText></View>;
+const ChatScreen = () => <View><RNText>Chat</RNText></View>;
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -27,7 +32,17 @@ import NetworkDebugScreen from '../screens/dev/NetworkDebugScreen';
 import SeniorHomeScreen from '../screens/senior/SeniorHomeScreen';
 import FamilyHomeScreen from '../screens/family/FamilyHomeScreen';
 
-// Types
+// Types for Family Stack
+type FamilyStackParamList = {
+  FamilyHome: undefined;
+  SeniorProfile: { seniorId: string };
+  AddFamilyMember: undefined;
+  SeniorHealth: { seniorId: string };
+  Medication: { seniorId: string };
+  Emergency: { seniorId: string };
+};
+
+// Main App Types
 export type RootStackParamList = {
   // Auth Stack
   Auth: undefined;
@@ -158,35 +173,100 @@ const SeniorTabs = () => {
   );
 };
 
+// Create a stack navigator for family screens
+const FamilyStack = createStackNavigator<FamilyStackParamList>();
+
+const FamilyStackScreen = () => (
+  <FamilyStack.Navigator
+    screenOptions={{
+      headerStyle: {
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+    }}
+  >
+    <FamilyStack.Screen 
+      name="FamilyHome" 
+      component={FamilyHomeScreen} 
+      options={{ headerShown: false }}
+    />
+    <FamilyStack.Screen 
+      name="SeniorProfile" 
+      component={require('../screens/family/SeniorProfileScreen').default}
+      options={{ title: 'Senior Profile' }}
+    />
+    <FamilyStack.Screen 
+      name="AddFamilyMember" 
+      component={require('../screens/family/AddFamilyMemberScreen').default}
+      options={{ title: 'Add Family Member' }}
+    />
+    <FamilyStack.Screen 
+      name="SeniorHealth" 
+      component={require('../screens/family/SeniorHealthScreen').default}
+      options={{ title: 'Health Overview' }}
+    />
+    <FamilyStack.Screen 
+      name="Medication" 
+      component={require('../screens/family/MedicationScreen').default}
+      options={{ title: 'Medications' }}
+    />
+    <FamilyStack.Screen 
+      name="Emergency" 
+      component={require('../screens/family/EmergencyScreen').default}
+      options={{ title: 'Emergency Contacts' }}
+    />
+  </FamilyStack.Navigator>
+);
+
 const FamilyTabs = () => {
   const theme = useTheme();
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
+    <FamilyProvider>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName: string;
 
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Activity') {
-            iconName = focused ? 'pulse' : 'pulse-outline';
-          } else if (route.name === 'Chat') {
-            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-          } else {
-            iconName = focused ? 'person' : 'person-outline';
-          }
+            if (route.name === 'FamilyHome') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Activity') {
+              iconName = focused ? 'pulse' : 'pulse-outline';
+            } else if (route.name === 'Chat') {
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+            } else {
+              iconName = focused ? 'person' : 'person-outline';
+            }
 
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
-    >
-  <Tab.Screen name="FamilyHome" component={FamilyHomeScreen} />
-  <Tab.Screen name="Profile" component={ProfileEntry} />
-    </Tab.Navigator>
+            return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: 'gray',
+          headerShown: false,
+        })}
+      >
+        <Tab.Screen 
+          name="FamilyHome" 
+          component={FamilyStackScreen} 
+          options={{ title: 'Home' }}
+        />
+        <Tab.Screen 
+          name="Activity" 
+          component={ActivityScreen} 
+          options={{ title: 'Activity' }}
+        />
+        <Tab.Screen 
+          name="Chat" 
+          component={ChatScreen} 
+          options={{ title: 'Chat' }}
+        />
+        <Tab.Screen 
+          name="Profile" 
+          component={ProfileEntry} 
+          options={{ title: 'Profile' }}
+        />
+      </Tab.Navigator>
+    </FamilyProvider>
   );
 };
 

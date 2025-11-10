@@ -1,189 +1,191 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
-import { useTheme, Card, Avatar, ActivityIndicator, FAB, Badge } from 'react-native-paper';
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, StatusBar } from 'react-native';
+import { useTheme, Card, Avatar, ActivityIndicator, FAB, Badge, Button } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useAuth } from '@contexts/AuthContext';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useAuth } from '../../contexts/AuthContext';
+import { useFamily } from '../../contexts/FamilyContext';
+import type { FamilyConnection as ServiceFamilyConnection } from '../../services/family.service';
+import { format } from 'date-fns';
 
-type RootStackParamList = {
-  FamilyHome: undefined;
-  SeniorProfile: { seniorId: string };
-  ConnectionRequest: undefined;
-  // Add other screens as needed
+// Import the FamilyStackParamList type from AppNavigator
+import type { FamilyStackParamList } from '../../navigation/AppNavigator';
+
+// Combined type for navigation props
+type HomeScreenNavigationProp = StackNavigationProp<FamilyStackParamList, 'FamilyHome'>;
+
+type FamilyConnection = Omit<ServiceFamilyConnection, 'senior_name' | 'senior_avatar'> & {
+  senior_name: string;
+  senior_avatar: string;
+  unreadAlerts?: number;
 };
-
-type Senior = {
-  id: string;
-  name: string;
-  relationship: string;
-  lastActive: string;
-  healthStatus: 'excellent' | 'good' | 'fair' | 'poor';
-  profileImage?: string;
-  unreadAlerts: number;
-};
-
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'FamilyHome'>;
 
 const FamilyHomeScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { user } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [seniors, setSeniors] = useState<Senior[]>([]);
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { connections, loading, refreshConnections } = useFamily();
+  const [refreshing, setRefreshing] = React.useState(false);
+  
+  // Set navigation options
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: 'Family Connections',
+      headerStyle: {
+        elevation: 0,
+        shadowOpacity: 0,
+        backgroundColor: theme.colors.surface,
+      },
+      headerTitleStyle: {
+        color: theme.colors.onSurface,
+        fontSize: 20,
+        fontWeight: '600',
+      },
+    });
+  }, [navigation, theme]);
 
-  // Mock data - replace with actual API call
-  const mockSeniors: Senior[] = [
-    {
-      id: '1',
-      name: 'John Smith',
-      relationship: 'Father',
-      lastActive: '2h ago',
-      healthStatus: 'good',
-      profileImage: 'https://randomuser.me/api/portraits/men/1.jpg',
-      unreadAlerts: 2,
-    },
-    {
-      id: '2',
-      name: 'Mary Johnson',
-      relationship: 'Mother',
-      lastActive: '5h ago',
-      healthStatus: 'excellent',
-      profileImage: 'https://randomuser.me/api/portraits/women/1.jpg',
-      unreadAlerts: 0,
-    },
-  ];
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshConnections();
+    setRefreshing(false);
+  }, [refreshConnections]);
 
-  const loadSeniors = async () => {
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSeniors(mockSeniors);
-    } catch (error) {
-      console.error('Error loading seniors:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  const getHealthStatus = (lastActive: string): 'excellent' | 'good' | 'fair' | 'poor' => {
+    const hoursAgo = (Date.now() - new Date(lastActive).getTime()) / (1000 * 60 * 60);
+    if (hoursAgo < 1) return 'excellent';
+    if (hoursAgo < 24) return 'good';
+    if (hoursAgo < 72) return 'fair';
+    return 'poor';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'excellent':
+        return '#4CAF50';
+      case 'good':
+        return '#8BC34A';
+      case 'fair':
+        return '#FFC107';
+      case 'poor':
+        return '#F44336';
+      default:
+        return '#9E9E9E';
     }
   };
 
-  useEffect(() => {
-    loadSeniors();
-  }, []);
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <MaterialIcons name="group" size={64} color={theme.colors.primary} />
+      <Text style={[styles.emptyText, { color: theme.colors.onSurface }]}>
+        No family members added yet
+      </Text>
+      <Button
+        mode="contained"
+        onPress={() => navigation.navigate('AddFamilyMember')}
+        style={styles.addButton}
+      >
+        Add Family Member
+      </Button>
+    </View>
+  );
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadSeniors();
+  const renderConnection = ({ item }: { item: FamilyConnection }) => {
+    const status = getHealthStatus(item.updated_at);
+    const statusColor = getStatusColor(status);
+    
+    const handleSeniorPress = (seniorId: string) => {
+    // Navigate to the SeniorProfile screen in the current stack
+    navigation.navigate('SeniorProfile', { seniorId });
   };
 
-  const renderSeniorItem = ({ item }: { item: Senior }) => {
-    const getStatusColor = () => {
-      switch (item.healthStatus) {
-        case 'excellent': return '#4CAF50';
-        case 'good': return '#8BC34A';
-        case 'fair': return '#FFC107';
-        case 'poor': return '#F44336';
-        default: return '#9E9E9E';
-      }
-    };
-
     return (
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('SeniorProfile', { seniorId: item.id })}
-        activeOpacity={0.8}
-      >
-        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+      <TouchableOpacity onPress={() => handleSeniorPress(item.senior_id)}>
+        <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <View style={styles.avatarContainer}>
-              <Avatar.Image 
-                source={{ uri: item.profileImage }} 
+              <Avatar.Image
                 size={60}
-                style={styles.avatar}
+                source={{
+                  uri: item.senior_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.senior_name || '')}`,
+                }}
               />
-              {item.unreadAlerts > 0 && (
-                <Badge style={styles.badge} size={24}>
-                  {item.unreadAlerts}
-                </Badge>
-              )}
+              <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             </View>
-            <View style={styles.seniorInfo}>
-              <Text style={[styles.seniorName, { color: theme.colors.onSurface }]}>
-                {item.name}
+            <View style={styles.infoContainer}>
+              <Text style={styles.name}>{item.senior_name || 'Unknown User'}</Text>
+              <Text style={styles.relationship}>{item.relationship || 'Family Member'}</Text>
+              <Text style={styles.lastActive}>
+                Last active: {format(new Date(item.updated_at), 'MMM d, yyyy h:mm a')}
               </Text>
-              <Text style={[styles.relationship, { color: theme.colors.onSurfaceVariant }]}>
-                {item.relationship}
-              </Text>
-              <View style={styles.statusContainer}>
-                <View 
-                  style={[styles.statusDot, { backgroundColor: getStatusColor() }]} 
-                />
-                <Text style={[styles.statusText, { color: theme.colors.onSurfaceVariant }]}>
-                  {item.healthStatus.charAt(0).toUpperCase() + item.healthStatus.slice(1)}
-                </Text>
-              </View>
             </View>
-            <MaterialIcons 
-              name="chevron-right" 
-              size={24} 
-              color={theme.colors.onSurfaceVariant} 
-            />
+            {item.unreadAlerts && item.unreadAlerts > 0 && (
+              <Badge style={styles.badge}>{item.unreadAlerts}</Badge>
+            )}
           </Card.Content>
         </Card>
       </TouchableOpacity>
     );
   };
 
-  if (loading) {
+  if ((loading || isAuthLoading) && !refreshing) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator animating={true} size="large" color={theme.colors.primary} />
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.onSurface }]}>
+      <StatusBar 
+        barStyle={theme.dark ? 'light-content' : 'dark-content'} 
+        backgroundColor="transparent"
+        translucent
+      />
+      <View style={[styles.header, { 
+        backgroundColor: theme.colors.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.outlineVariant, // Use a lighter border color
+        elevation: 2, // Add subtle shadow on Android
+        shadowColor: theme.colors.shadow, // Add shadow for iOS
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      }]}>
+        <Text style={[styles.title, { 
+          // color: theme.colors.onSurface,
+          color: theme.colors.primary
+        }]}>
           Family Connections
         </Text>
       </View>
 
-      <FlatList
-        data={seniors}
-        renderItem={renderSeniorItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[theme.colors.primary]}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialIcons 
-              name="elderly" 
-              size={48} 
-              color={theme.colors.onSurfaceVariant} 
-              style={styles.emptyIcon}
+      {connections.length === 0 ? (
+        renderEmptyState()
+      ) : (
+        <FlatList
+          data={connections as unknown as FamilyConnection[]}
+          renderItem={renderConnection}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
             />
-            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-              No seniors connected yet
-            </Text>
-            <Text style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}>
-              Add a senior to get started
-            </Text>
-          </View>
-        }
-      />
+          }
+        />
+      )}
 
       <FAB
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         icon="plus"
-        onPress={() => navigation.navigate('ConnectionRequest')}
+        onPress={() => navigation.navigate('AddFamilyMember')}
         color="white"
       />
     </View>
@@ -193,6 +195,7 @@ const FamilyHomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: StatusBar.currentHeight,
   },
   loadingContainer: {
     flex: 1,
@@ -201,11 +204,15 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    paddingBottom: 8,
+    paddingTop: 24, // Increased top padding
+    paddingBottom: 12,
+    marginBottom: 8, // Add some space below the header
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '700',
+    marginTop: 8,
+    marginBottom: 4,
   },
   listContent: {
     padding: 16,
@@ -225,40 +232,38 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginRight: 16,
   },
-  avatar: {
-    backgroundColor: 'transparent',
-  },
-  badge: {
+  statusDot: {
     position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#FF3B30',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: 'white',
+    bottom: 2,
+    right: 2,
   },
-  seniorInfo: {
+  infoContainer: {
     flex: 1,
   },
-  seniorName: {
-    fontSize: 18,
+  name: {
+    fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
   relationship: {
     fontSize: 14,
-    marginBottom: 6,
+    color: '#666',
+    marginBottom: 4,
   },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  lastActive: {
+    fontSize: 12,
+    color: '#888',
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 13,
-    textTransform: 'capitalize',
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#FF3B30',
   },
   emptyContainer: {
     flex: 1,
@@ -280,6 +285,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     opacity: 0.7,
+    marginBottom: 16,
+  },
+  addButton: {
+    marginTop: 16,
+    width: '80%',
   },
   fab: {
     position: 'absolute',

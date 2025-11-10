@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from './supabase';
 
 export interface FamilyConnection {
   id: string;
@@ -18,8 +18,8 @@ export interface FamilyConnection {
   created_at: string;
   updated_at: string;
   senior_name?: string;
-  senior_email?: string;
-  senior_avatar?: string;
+  senior_email?: string;  // Made optional
+  senior_avatar?: string | null;
   family_member_name?: string;
   family_member_email?: string;
   family_member_avatar?: string;
@@ -108,26 +108,85 @@ export const FamilyService = {
 
   // Get all connected seniors for the current user
   async getConnectedSeniors() {
-    const { data, error } = await supabase
-      .from('family_connections_view')
-      .select('*')
-      .eq('family_member_id', (await supabase.auth.getUser()).data.user?.id)
-      .eq('status', 'accepted');
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        console.error('No user ID found');
+        return [];
+      }
 
-    if (error) throw error;
-    return data;
+      const { data: connections, error } = await supabase
+        .from('family_connections')
+        .select('*')
+        .eq('family_member_id', userId)
+        .eq('status', 'accepted');
+
+      if (error) throw error;
+      
+      if (!connections || connections.length === 0) return [];
+      
+      // Get all senior IDs
+      const seniorIds = connections.map(conn => conn.senior_id);
+      
+      // First, check if the avatar_url column exists
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', seniorIds);
+        
+      if (profilesError) throw profilesError;
+      
+      // Map connections with their respective profiles
+      return connections.map(connection => {
+        const profile = profiles.find(p => p.id === connection.senior_id);
+        return {
+          ...connection,
+          senior_name: profile?.full_name || 'Unknown',
+          senior_avatar: null, // avatar_url is not available
+        };
+      });
+    } catch (error) {
+      console.error('Error in getConnectedSeniors:', error);
+      throw error;
+    }
   },
 
   // Get all family members for a senior
   async getFamilyMembers(seniorId: string) {
-    const { data, error } = await supabase
-      .from('family_connections_view')
-      .select('*')
-      .eq('senior_id', seniorId)
-      .eq('status', 'accepted');
+    try {
+      // First, get the connections
+      const { data: connections, error: connectionsError } = await supabase
+        .from('family_connections')
+        .select('*')
+        .eq('senior_id', seniorId);
 
-    if (error) throw error;
-    return data;
+      if (connectionsError) throw connectionsError;
+      if (!connections || connections.length === 0) return [];
+
+      // Get all family member IDs
+      const familyMemberIds = connections.map(conn => conn.family_member_id);
+
+      // Get profiles without avatar_url
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', familyMemberIds);
+
+      if (profilesError) throw profilesError;
+
+      // Map connections with their respective profiles
+      return connections.map(connection => {
+        const profile = profiles.find(p => p.id === connection.family_member_id);
+        return {
+          ...connection,
+          family_member_name: profile?.full_name || 'Unknown',
+          family_member_avatar: null, // avatar_url is not available
+        };
+      });
+    } catch (error) {
+      console.error('Error in getFamilyMembers:', error);
+      throw error;
+    }
   },
 
   // Update connection permissions
