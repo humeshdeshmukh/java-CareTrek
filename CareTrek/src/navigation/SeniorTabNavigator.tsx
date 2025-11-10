@@ -16,6 +16,7 @@ import FallDetectionScreen from '../screens/senior/screens/FallDetectionScreen';
 import ProfileScreen from '../screens/senior/screens/ProfileScreen';
 import ActivityScreen from '../screens/senior/screens/ActivityScreen';
 import MedicalIDScreen from '../screens/senior/screens/MedicalIDScreen';
+import LocationScreen from '../screens/senior/screens/LocationScreen';
 import AppointmentsScreen from '../screens/senior/screens/AppointmentsScreen';
 
 export type SeniorTabParamList = {
@@ -46,6 +47,7 @@ export type SeniorTabParamList = {
   AccountSettings: undefined;
   PrivacyPolicy: undefined;
   MedicalID: undefined;
+  Location: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -105,41 +107,6 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen 
-        name="ShareID" 
-        component={ShareIDScreen} 
-        options={{ 
-          title: 'Share My ID',
-        }} 
-      />
-      <Stack.Screen 
-        name="ConnectionRequest" 
-        component={ConnectionRequestScreen} 
-        options={{ 
-          title: 'Connection Request',
-        }} 
-      />
-      <Stack.Screen 
-        name="FallDetection" 
-        component={FallDetectionScreen} 
-        options={{ 
-          title: 'Fall Detection',
-        }} 
-      />
-      <Stack.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ 
-          title: 'My Profile',
-        }} 
-      />
-      <Stack.Screen 
-        name="Activity" 
-        component={ActivityScreen} 
-        options={{ 
-          title: 'Activity',
-        }} 
-      />
-      <Stack.Screen
         name="Appointments"
         component={AppointmentsScreen}
         options={{
@@ -147,10 +114,10 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen 
-        name="MedicalID" 
-        component={MedicalIDScreen} 
+        name="FallDetection" 
+        component={FallDetectionScreen} 
         options={{ 
-          title: 'Medical ID',
+          title: 'Fall Detection',
         }} 
       />
     </Stack.Navigator>
@@ -222,6 +189,7 @@ const ProfileStack = () => {
         },
         headerBackTitle: 'Back',
       }}
+      initialRouteName="Profile"
     >
       <Stack.Screen 
         name="Profile" 
@@ -229,6 +197,34 @@ const ProfileStack = () => {
         options={{ 
           title: 'My Profile',
           headerShown: true,
+        }} 
+      />
+      <Stack.Screen 
+        name="Location" 
+        component={LocationScreen} 
+        options={{ 
+          title: 'My Location',
+        }} 
+      />
+      <Stack.Screen 
+        name="ShareID" 
+        component={ShareIDScreen} 
+        options={{ 
+          title: 'Share My ID',
+        }} 
+      />
+      <Stack.Screen 
+        name="MedicalID" 
+        component={MedicalIDScreen}
+        options={{ 
+          title: 'Medical ID',
+        }} 
+      />
+      <Stack.Screen 
+        name="ConnectionRequest" 
+        component={ConnectionRequestScreen} 
+        options={{ 
+          title: 'Connection Request',
         }} 
       />
       <Stack.Screen 
@@ -250,13 +246,6 @@ const ProfileStack = () => {
         component={ProfileScreen} // Replace with actual PrivacyPolicyScreen
         options={{ 
           title: 'Privacy Policy',
-        }} 
-      />
-      <Stack.Screen 
-        name="MedicalID" 
-        component={MedicalIDScreen}
-        options={{ 
-          title: 'Medical ID',
         }} 
       />
     </Stack.Navigator>

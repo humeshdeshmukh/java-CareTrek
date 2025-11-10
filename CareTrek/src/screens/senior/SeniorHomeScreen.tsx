@@ -11,17 +11,20 @@ import { useAuth } from '../../contexts/AuthContext';
 // Define the parameter list for the root stack
 type RootStackParamList = {
   // Bottom Tabs
-  HomeTab: undefined;
-  ActivityTab: undefined;
-  HealthTab: undefined;
-  ProfileTab: undefined;
+  HomeTab: { screen?: keyof RootStackParamList };
+  HealthTab: { screen?: keyof RootStackParamList };
+  ProfileTab: { screen?: keyof RootStackParamList };
   
-  // Screens that can be navigated to directly
+  // Screens
   SeniorHome: undefined;
   Health: undefined;
   Medication: undefined;
   Emergency: undefined;
   ShareID: undefined;
+  FallDetection: undefined;
+  Appointments: undefined;
+  MedicalID: undefined;
+  Location: undefined;
   ConnectionRequest: {
     familyMemberId: string;
     familyMemberName: string;
@@ -29,11 +32,12 @@ type RootStackParamList = {
     relationship?: string;
     timestamp: string;
   };
-  FallDetection: undefined;
-  Profile: undefined;
+  
+  // Other screens that might be navigated to
   Activity: undefined;
-  Appointments: undefined;
-  MedicalID: undefined;
+  EditProfile: undefined;
+  AccountSettings: undefined;
+  PrivacyPolicy: undefined;
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SeniorHome'>;
@@ -83,30 +87,37 @@ const SeniorHomeScreen: React.FC = () => {
     { 
       id: 'health', 
       title: 'Health', 
-      icon: 'heart-pulse' as const,
-      screen: 'Health' as const,
-      color: '#F44336'
+      icon: 'heart-pulse',
+      color: '#FF6B6B',
+      screen: 'Health' as const
     },
     { 
       id: 'medication', 
       title: 'Medication', 
-      icon: 'pill' as const,
-      screen: 'Medication' as const,
-      color: '#4CAF50'
-    },
-    { 
-      id: 'activity', 
-      title: 'Activity', 
-      icon: 'run' as const,
-      screen: 'Activity' as const,
-      color: '#2196F3'
+      icon: 'pill',
+      color: '#4ECDC4',
+      screen: 'Medication' as const
     },
     { 
       id: 'appointments', 
       title: 'Appointments', 
-      icon: 'calendar' as const,
-      screen: 'Appointments' as const,
-      color: '#673AB7'
+      icon: 'calendar',
+      color: '#45B7D1',
+      screen: 'Appointments' as const
+    },
+    { 
+      id: 'location', 
+      title: 'My Location', 
+      icon: 'map-marker',
+      color: '#6C5CE7',
+      screen: 'Location' as const
+    },
+    { 
+      id: 'emergency', 
+      title: 'Emergency', 
+      icon: 'alert',
+      color: '#FF6B6B',
+      screen: 'Emergency' as const
     },
     { 
       id: 'fallDetection', 
@@ -128,13 +139,6 @@ const SeniorHomeScreen: React.FC = () => {
       icon: 'account-plus' as const,
       screen: 'ShareID' as const,
       color: '#00BCD4'
-    },
-    { 
-      id: 'profile', 
-      title: 'Profile', 
-      icon: 'account' as const,
-      screen: 'Profile' as const,
-      color: '#607D8B'
     }
   ];
 
@@ -171,63 +175,34 @@ const SeniorHomeScreen: React.FC = () => {
 
   const navigateTo = (screen: keyof RootStackParamList) => {
     try {
-      // Map screen names to their corresponding tab names
-      const tabMap: Record<string, string> = {
-        'Health': 'HealthTab',
-        'Medication': 'HealthTab',
-        'Emergency': 'HealthTab',
-        'Appointments': 'HomeTab',
-        'Activity': 'ActivityTab',
-        'Profile': 'ProfileTab',
-        'MedicalID': 'ProfileTab',
-        'ShareID': 'ProfileTab',
-        'ConnectionRequest': 'ProfileTab'
+      // Map of screens to their respective tab navigators
+      const tabMap: Record<string, { tab: string; params?: any }> = {
+        // Health Tab Screens
+        'Health': { tab: 'HealthTab' },
+        'Medication': { tab: 'HealthTab' },
+        'Emergency': { tab: 'HealthTab' },
+        
+        // Home Tab Screens
+        'Appointments': { tab: 'HomeTab' },
+        'FallDetection': { tab: 'HomeTab' },
+        
+        // Profile Tab Screens
+        'Location': { tab: 'ProfileTab' },
+        'MedicalID': { tab: 'ProfileTab' },
+        'ShareID': { tab: 'ProfileTab' },
+        'ConnectionRequest': { tab: 'ProfileTab' }
       };
 
-      const tabName = tabMap[screen as string];
+      const route = tabMap[screen as string];
 
-      // If this screen belongs to a tab, navigate via the parent Tab navigator
-      if (tabName) {
-          // Walk up the parent chain to find a navigator that knows about the tab route
-          let parent = (navigation as any).getParent ? (navigation as any).getParent() : null;
-          let targetParent = null as any;
-
-          while (parent) {
-            try {
-              const state = parent.getState ? parent.getState() : null;
-              const routeNames = state?.routeNames || state?.routes?.map((r: any) => r.name) || [];
-              if (routeNames && routeNames.includes(tabName)) {
-                targetParent = parent;
-                break;
-              }
-            } catch (e) {
-              // ignore and continue climbing
-            }
-            parent = parent.getParent ? parent.getParent() : null;
-          }
-
-          if (targetParent && typeof targetParent.navigate === 'function') {
-            // If we also want to open a specific nested screen within the tab,
-            // pass the `screen` param to the tab navigator (supported by nested navigators)
-            if (['Health', 'Medication', 'Emergency', 'MedicalID', 'ShareID', 'ConnectionRequest', 'Activity', 'Profile', 'Appointments'].includes(screen as string)) {
-              // Navigate to the tab, then to the specific screen inside that tab's stack
-              // e.g. parent.navigate('HealthTab', { screen: 'Medication' })
-              // @ts-ignore - dynamic nested navigation
-              targetParent.navigate(tabName, { screen });
-            } else {
-              // Just navigate to the tab's default screen
-              // @ts-ignore - tabName is a valid route on the parent navigator
-              targetParent.navigate(tabName);
-            }
-          } else {
-            // Fallback: try to navigate locally (may fail if route isn't in this navigator)
-            // @ts-ignore
-            navigation.navigate(tabName as any);
-          }
+      if (route) {
+        // For screens that belong to a tab, navigate to the tab first
+        // @ts-ignore - We know these are valid tab names
+        navigation.navigate(route.tab, { screen, ...(route.params || {}) });
       } else {
-        // Not a tab route — navigate locally
-        // @ts-ignore
-        navigation.navigate(screen as any);
+        // For other screens, navigate directly
+        // @ts-ignore - We know these are valid screen names
+        navigation.navigate(screen);
       }
     } catch (error) {
       console.error('Navigation error:', error);
