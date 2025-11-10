@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { Avatar, Button, Card, Text, useTheme, List, Switch } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Avatar, Card, Text, useTheme, Switch, Button } from 'react-native-paper';
+import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAppTheme } from '@contexts/ThemeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../../../src/services/supabase';
 
 interface ExtendedUserProfile {
@@ -21,6 +23,7 @@ const ProfileScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationSharing, setLocationSharing] = useState(true);
+  const { toggleTheme, isDarkMode } = useAppTheme();
   const [user, setUser] = useState<any>(null);
 
   const fetchUserAndProfile = useCallback(async () => {
@@ -73,7 +76,7 @@ const ProfileScreen = ({ navigation }: any) => {
       
     } catch (error: any) {
       console.error('Error:', error);
-      Alert.alert('Error', error.message || 'Failed to load profile data');
+console.error('Failed to load profile data:', error);
     } finally {
       setLoading(false);
     }
@@ -122,35 +125,7 @@ const ProfileScreen = ({ navigation }: any) => {
       if (error) throw error;
     } catch (error) {
       console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to sign out');
-    }
-  };
-
-  const handleUpdateProfile = async (updates: Partial<ExtendedUserProfile>) => {
-    if (!user?.id) return false;
-    
-    try {
-      setLoading(true);
-      // Only include fields that exist in our schema
-      const { id, full_name, role, phone } = updates;
-      const cleanUpdates = { id, full_name, role, phone };
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(cleanUpdates)
-        .eq('id', user.id)
-        .select('id, full_name, role, phone, created_at')
-        .single();
-
-      if (error) throw error;
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
-      return true;
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', error.message || 'Failed to update profile');
-      return false;
-    } finally {
-      setLoading(false);
+      console.error('Failed to sign out:', error);
     }
   };
 
@@ -186,23 +161,6 @@ const ProfileScreen = ({ navigation }: any) => {
           {user?.email || ''}
         </Text>
         
-        <Button 
-          mode="outlined" 
-          onPress={() => navigation.navigate('EditProfile', { 
-            profile,
-            // Only pass serializable data
-            userId: user?.id,
-            initialValues: {
-              full_name: profile?.full_name || '',
-              phone: profile?.phone || '',
-              role: profile?.role || 'senior'
-            }
-          })}
-          style={styles.editButton}
-          icon="pencil"
-        >
-          Edit Profile
-        </Button>
       </View>
 
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -256,38 +214,77 @@ const ProfileScreen = ({ navigation }: any) => {
         <Card.Content>
           <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>Settings</Text>
           
-          <List.Item
-            title="Notifications"
-            description="Enable or disable notifications"
-            left={props => <List.Icon {...props} icon="bell" />}
-            right={props => (
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                color={theme.colors.primary}
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <MaterialCommunityIcons 
+                name="bell" 
+                size={24} 
+                color={theme.colors.primary} 
+                style={styles.settingIcon}
               />
-            )}
-          />
+              <View>
+                <Text style={[styles.settingTitle, { color: theme.colors.onSurface }]}>
+                  Notifications
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  Enable or disable push notifications
+                </Text>
+              </View>
+            </View>
+            <Switch 
+              value={notificationsEnabled} 
+              onValueChange={setNotificationsEnabled}
+              color={theme.colors.primary}
+            />
+          </View>
           
-          <List.Item
-            title="Location Sharing"
-            description="Share your location with family members"
-            left={props => <List.Icon {...props} icon="map-marker" />}
-            right={props => (
-              <Switch
-                value={locationSharing}
-                onValueChange={setLocationSharing}
-                color={theme.colors.primary}
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <MaterialCommunityIcons 
+                name="map-marker" 
+                size={24} 
+                color={theme.colors.primary} 
+                style={styles.settingIcon}
               />
-            )}
-          />
-          
-          <List.Item
-            title="Privacy Policy"
-            left={props => <List.Icon {...props} icon="shield-lock" />}
-            onPress={() => navigation.navigate('PrivacyPolicy')}
-            right={props => <List.Icon {...props} icon="chevron-right" />}
-          />
+              <View>
+                <Text style={[styles.settingTitle, { color: theme.colors.onSurface }]}>
+                  Location Sharing
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  Share your location with family members
+                </Text>
+              </View>
+            </View>
+            <Switch 
+              value={locationSharing} 
+              onValueChange={setLocationSharing}
+              color={theme.colors.primary}
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <MaterialCommunityIcons 
+                name={isDarkMode ? 'weather-night' : 'white-balance-sunny'} 
+                size={24} 
+                color={theme.colors.primary} 
+                style={styles.settingIcon}
+              />
+              <View>
+                <Text style={[styles.settingTitle, { color: theme.colors.onSurface }]}>
+                  {isDarkMode ? 'Dark Mode' : 'Light Mode'}
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  Switch between light and dark theme
+                </Text>
+              </View>
+            </View>
+            <Switch 
+              value={isDarkMode} 
+              onValueChange={toggleTheme}
+              color={theme.colors.primary}
+            />
+          </View>
         </Card.Content>
       </Card>
 
@@ -342,9 +339,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.7,
   },
-  editButton: {
-    marginTop: 8,
-  },
   card: {
     marginBottom: 16,
     borderRadius: 8,
@@ -362,6 +356,31 @@ const styles = StyleSheet.create({
   infoText: {
     marginLeft: 12,
     flex: 1,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  settingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  settingIcon: {
+    marginRight: 16,
+  },
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  settingDescription: {
+    fontSize: 12,
+    opacity: 0.8,
+    marginTop: 2,
   },
   buttonContainer: {
     margin: 16,

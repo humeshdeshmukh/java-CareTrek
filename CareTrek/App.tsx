@@ -3,25 +3,57 @@ import React from 'react';
 import { StatusBar, View, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider as PaperProvider, ActivityIndicator } from 'react-native-paper';
+import { ActivityIndicator } from 'react-native-paper';
 import { Provider as StoreProvider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { ThemeProvider } from 'styled-components/native';
 
 import { store, persistor } from './src/store/store';
-import { lightTheme as theme } from './src/theme';
+import { lightTheme } from './src/theme';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider, useAppTheme } from './src/contexts/ThemeContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 
 // Loading component for PersistGate
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color={theme.colors.primary} />
+    <ActivityIndicator size="large" color={lightTheme.colors.primary} />
   </View>
 );
+
+const AppContent = () => {
+  const { theme, isDarkMode } = useAppTheme();
+  
+  return (
+    <SafeAreaProvider>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
+      <NavigationContainer
+        theme={{
+          ...DefaultTheme,
+          colors: {
+            ...DefaultTheme.colors,
+            primary: theme.colors.primary,
+            background: theme.colors.background,
+            card: theme.colors.surface,
+            text: theme.colors.onSurface,
+            border: theme.colors.outline,
+            notification: theme.colors.error,
+          },
+        }}
+      >
+        <ErrorBoundary>
+          <AppNavigator />
+        </ErrorBoundary>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
+};
 
 export default function App() {
   // Development helpers: clear persisted state and capture global errors.
@@ -68,39 +100,14 @@ export default function App() {
       console.log('Skipping dev-only persisted purge.');
     }
   }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-  <StoreProvider store={store}>
+      <StoreProvider store={store}>
         <PersistGate loading={<LoadingScreen />} persistor={persistor}>
           <AuthProvider>
-            <ThemeProvider theme={theme}>
-              <PaperProvider theme={theme}>
-                <SafeAreaProvider>
-                  <StatusBar
-                    barStyle="dark-content"
-                    backgroundColor="transparent"
-                    translucent
-                  />
-                  <NavigationContainer
-                    theme={{
-                      ...DefaultTheme,
-                      colors: {
-                        ...DefaultTheme.colors,
-                        primary: theme.colors.primary,
-                        background: theme.colors.background,
-                        card: theme.colors.surface,
-                        text: theme.colors.text,
-                        border: theme.colors.border,
-                        notification: theme.colors.notification,
-                      },
-                    }}
-                    >
-                    <ErrorBoundary>
-                      <AppNavigator />
-                    </ErrorBoundary>
-                  </NavigationContainer>
-                </SafeAreaProvider>
-              </PaperProvider>
+            <ThemeProvider>
+              <AppContent />
             </ThemeProvider>
           </AuthProvider>
         </PersistGate>
@@ -114,6 +121,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
+    backgroundColor: lightTheme.colors.background,
   },
 });

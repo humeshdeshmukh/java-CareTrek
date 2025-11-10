@@ -24,6 +24,9 @@
       ],
       "@lib/*": [
         "lib/*"
+      ],
+      "@contexts/*": [
+        "src/contexts/*"
       ]
     },
     "typeRoots": [
