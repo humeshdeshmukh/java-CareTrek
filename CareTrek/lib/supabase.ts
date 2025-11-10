@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import 'react-native-url-polyfill/auto';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
 
-// These values should be moved to environment variables in production
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase URL or Anon Key. Please check your .env file.');
+}
+
+const supabaseUrl = SUPABASE_URL;
+const supabaseAnonKey = SUPABASE_ANON_KEY;
 
 // Custom storage adapter for React Native
 const ExpoSecureStoreAdapter = {
