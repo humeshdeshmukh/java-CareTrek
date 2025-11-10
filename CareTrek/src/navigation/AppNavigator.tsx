@@ -14,6 +14,7 @@ import AuthProvider from '../contexts/AuthProvider';
 import { useAppSelector } from '../store';
 import ProfileEntry from '../screens/profile/ProfileEntry';
 import SeniorTabNavigator from './SeniorTabNavigator';
+import FamilyTabNavigator from './FamilyTabNavigator';
 
 // Auth Screens
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -28,26 +29,44 @@ import FamilyHomeScreen from '../screens/family/FamilyHomeScreen';
 
 // Types
 export type RootStackParamList = {
+  // Auth Stack
   Auth: undefined;
   Login: undefined;
-  Main: undefined;
   Register: undefined;
   ForgotPassword: { email?: string };
+  
+  // Main Navigation
+  Main: undefined;
   NetworkDebug?: undefined;
   Profile: undefined;
+  
+  // Senior User Screens
   SeniorHome: undefined;
-  FamilyHome: undefined;
   SeniorTabs: undefined;
+  
+  // Family Member Screens
+  FamilyHome: undefined;
   FamilyTabs: undefined;
+  SeniorProfile: { seniorId: string };
+  SeniorHealth: { seniorId: string };
+  Medication: { seniorId: string };
+  Emergency: { seniorId: string };
+  Activity: { seniorId?: string };
+  Chat: { seniorId?: string; chatId?: string };
+  
+  // Common Screens
+  Settings: undefined;
+  Notifications: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
-  Alerts: undefined;
-  Health: undefined;
+  Activity: undefined;
+  Chat: undefined;
   Profile: undefined;
   SeniorHome: undefined;
   FamilyHome: undefined;
+  Connections: undefined;
 };
 
 // Screen props types for tab screens
@@ -98,25 +117,43 @@ const SeniorTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: string;
 
-          if (route.name === 'SeniorHome') {
+          if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Health') {
-            iconName = focused ? 'heart-pulse' : 'heart-outline';
-          } else if (route.name === 'Alerts') {
-            iconName = focused ? 'bell' : 'bell-outline';
+          } else if (route.name === 'Activity') {
+            iconName = focused ? 'pulse' : 'pulse-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else {
-            iconName = focused ? 'account' : 'account-outline';
+            iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}
     >
-  <Tab.Screen name="SeniorHome" component={SeniorHomeScreen} />
-  <Tab.Screen name="Profile" component={ProfileEntry} />
+      <Tab.Screen 
+        name="Home" 
+        component={SeniorHomeScreen}
+        options={{ title: 'Home' }}
+      />
+      <Tab.Screen 
+        name="Activity" 
+        component={ActivityScreen}
+        options={{ title: 'Activity' }}
+      />
+      <Tab.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{ title: 'Chat' }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileEntry}
+        options={{ title: 'Profile' }}
+      />
     </Tab.Navigator>
   );
 };
@@ -130,14 +167,14 @@ const FamilyTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: string;
 
-          if (route.name === 'FamilyHome') {
+          if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Health') {
-            iconName = focused ? 'heart-pulse' : 'heart-outline';
-          } else if (route.name === 'Alerts') {
-            iconName = focused ? 'bell' : 'bell-outline';
+          } else if (route.name === 'Activity') {
+            iconName = focused ? 'pulse' : 'pulse-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else {
-            iconName = focused ? 'account' : 'account-outline';
+            iconName = focused ? 'person' : 'person-outline';
           }
 
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;

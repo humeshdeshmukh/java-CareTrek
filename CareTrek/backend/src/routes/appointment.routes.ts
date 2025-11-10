@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateToken, checkOwnership } from '../middleware/auth';
+import { authenticate, checkOwnership } from '../middleware/auth';
 import {
   getAppointments,
   createAppointment,
@@ -10,7 +10,7 @@ import {
 const router = Router();
 
 // Protected routes (require authentication)
-router.use(authenticateToken);
+router.use(authenticate);
 
 // GET /api/appointments - Get all appointments for the authenticated user
 router.get('/', getAppointments);

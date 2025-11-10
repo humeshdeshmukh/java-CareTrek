@@ -1,12 +1,23 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import appointmentRoutes from './routes/appointment.routes';
-import { config } from 'dotenv';
+import healthRoutes from './routes/health.routes';
+
+// Debug: Log current working directory
+console.log('Current working directory:', process.cwd());
 
 // Load environment variables from .env file
-config({ path: '.env' });
+const envPath = '.env';
+console.log('Loading environment variables from:', envPath);
+const result = config({ path: envPath });
+
+if (result.error) {
+  console.error('Error loading .env file:', result.error);
+} else {
+  console.log('Successfully loaded .env file');
+}
 
 const { 
   SUPABASE_URL = '', 
@@ -14,6 +25,13 @@ const {
   PORT = '5000',
   JWT_SECRET = 'your-default-jwt-secret'
 } = process.env;
+
+// Debug: Log loaded environment variables (redacting sensitive info)
+console.log('Environment variables loaded:');
+console.log('- SUPABASE_URL:', SUPABASE_URL ? '*** (set)' : 'Not set');
+console.log('- SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '*** (set)' : 'Not set');
+console.log('- JWT_SECRET:', JWT_SECRET ? '*** (set)' : 'Not set');
+console.log('- PORT:', PORT);
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing required environment variables: SUPABASE_URL and SUPABASE_ANON_KEY must be set');
@@ -47,7 +65,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize Supabase client
+// Initialize Supabase client with better error handling
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Missing required Supabase configuration');
+  process.exit(1);
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: false,
@@ -56,11 +79,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+console.log('Supabase client initialized successfully');
+
 // Export supabase for use in other modules
 export { supabase };
 
-// Routes
+// API Routes
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/health', healthRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

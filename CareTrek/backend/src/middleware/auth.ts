@@ -1,10 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import { jwtDecode } from 'jwt-decode';
-import { supabase } from '../server';
+import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
+
+// Initialize Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  }
+});
 
 interface JwtPayload {
   sub: string;
-  email: string;
+  email?: string;  // Make email optional to match User interface
   user_metadata?: {
     [key: string]: any;
   };
@@ -16,16 +26,22 @@ interface JwtPayload {
 // Extend Express Request type to include user information
 declare global {
   namespace Express {
+    interface User {
+      id: string;
+      email?: string;  // Made optional to match JwtPayload
+      role?: string;
+      user_metadata?: Record<string, any>;
+      app_metadata?: Record<string, any>;
+    }
+    
     interface Request {
-      user?: {
-        id: string;
-        email: string;
-      };
+      user?: User;
     }
   }
 }
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+// Export the authenticate function
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
