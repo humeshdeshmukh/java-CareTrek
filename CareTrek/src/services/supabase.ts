@@ -1,24 +1,16 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, User } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
-// Avoid importing profileService here to prevent a require-cycle (profileService imports supabase)
 
-export interface UserProfile {
-  id: string;
-  full_name: string;
-  role: 'senior' | 'family';
-  phone?: string;
-  created_at?: string;
-}
-
-const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+// Supabase configuration - using direct values for now
+const supabaseUrl = 'https://pankmvkykwcnxtaacasv.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhbmttdmt5a3djbnh0YWFjYXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3MDkxNjYsImV4cCI6MjA3ODI4NTE2Nn0.d--cEyPm0XbeU7thro6cLn-UXp48v86XtBaFH9lDqKE';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase configuration. Please check your environment variables.');
 }
 
+// Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
@@ -27,6 +19,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// Test the connection
+supabase
+  .from('medications')
+  .select('*')
+  .limit(1)
+  .then(({ data, error }) => {
+    if (error) {
+      console.error('Supabase connection test failed:', error.message);
+    } else {
+      console.log('Successfully connected to Supabase!');
+    }
+  });
+
+export interface UserProfile {
+  id: string;
+  full_name: string;
+  role: 'senior' | 'family';
+  phone?: string;
+  created_at?: string;
+}
 
 interface SignUpParams {
   email: string;

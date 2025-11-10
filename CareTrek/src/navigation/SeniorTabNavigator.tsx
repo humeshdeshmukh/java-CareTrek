@@ -148,6 +148,7 @@ const HealthStack = () => {
   
   return (
     <Stack.Navigator
+      initialRouteName="Medication"
       screenOptions={{
         headerStyle: {
           backgroundColor: theme.colors.surface,
@@ -162,18 +163,18 @@ const HealthStack = () => {
       }}
     >
       <Stack.Screen 
-        name="Health" 
-        component={HealthDashboardScreen} 
-        options={{ 
-          title: 'Health Dashboard',
-          headerShown: true,
-        }} 
-      />
-      <Stack.Screen 
         name="Medication" 
         component={MedicationScreen} 
         options={{ 
           title: 'Medication',
+          headerShown: true,
+        }} 
+      />
+      <Stack.Screen 
+        name="Health" 
+        component={HealthDashboardScreen} 
+        options={{ 
+          title: 'Health Dashboard',
           headerShown: true,
         }} 
       />
@@ -362,11 +363,17 @@ const SeniorTabNavigator = () => {
         name="HealthTab"
         component={HealthStack}
         options={{
-          title: 'Health',
+          title: 'Medication',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="heart-pulse" size={size} color={color} />
+            <MaterialCommunityIcons name="pill" size={size} color={color} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('HealthTab', { screen: 'Medication' });
+          },
+        })}
       />
       <Tab.Screen 
         name="ProfileTab" 
