@@ -189,6 +189,39 @@ const HealthStack = () => {
   );
 };
 
+// Stack Navigator for Chat tab
+const ChatStack = () => {
+  const theme = useTheme();
+  
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: theme.colors.primary,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+        headerBackTitle: 'Back',
+      }}
+      initialRouteName="Chat"
+    >
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen} 
+        options={{ 
+          title: 'Chat with Care Team',
+          headerShown: true,
+        }} 
+      />
+      {/* Add more chat-related screens here if needed */}
+    </Stack.Navigator>
+  );
+};
+
 // Stack Navigator for Profile tab
 const ProfileStack = () => {
   const theme = useTheme();
@@ -273,23 +306,28 @@ const ProfileStack = () => {
 const SeniorTabNavigator = () => {
   const theme = useTheme();
 
+  // Update the tab bar icon for Chat tab
+  const getTabBarIcon = (route: any, focused: boolean, color: string, size: number) => {
+    let iconName: string = 'home';
+
+    if (route.name === 'HomeTab') {
+      iconName = focused ? 'home' : 'home-outline';
+    } else if (route.name === 'ChatTab') {
+      iconName = focused ? 'message-text' : 'message-text-outline';
+    } else if (route.name === 'HealthTab') {
+      iconName = focused ? 'heart-pulse' : 'heart-pulse';
+    } else if (route.name === 'ProfileTab') {
+      iconName = focused ? 'account' : 'account-outline';
+    }
+
+    return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'home';
-
-          if (route.name === 'HomeTab') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'ActivityTab') {
-            iconName = focused ? 'chart-line' : 'chart-line';
-          } else if (route.name === 'HealthTab') {
-            iconName = focused ? 'heart-pulse' : 'heart-pulse';
-          } else if (route.name === 'ProfileTab') {
-            iconName = focused ? 'account' : 'account-outline';
-          }
-
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          return getTabBarIcon(route, focused, color, size);
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceDisabled,
@@ -311,12 +349,12 @@ const SeniorTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="ActivityTab"
-        component={ActivityScreen}
+        name="ChatTab"
+        component={ChatStack}
         options={{
-          title: 'Activity',
+          title: 'Chat',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-line" size={size} color={color} />
+            <MaterialCommunityIcons name="message-text" size={size} color={color} />
           ),
         }}
       />
